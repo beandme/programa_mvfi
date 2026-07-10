@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Control de Asignaciones MVFI</title>
+    <meta name="apple-mobile-web-app-title" content="MVFI Control">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180' width='180' height='180'><rect width='180' height='180' rx='40' fill='%230f172a'/><circle cx='90' cy='90' r='70' fill='none' stroke='%23e2e8f0' stroke-width='2' stroke-dasharray='4 4' opacity='0.3'/><path d='M90 35 L135 55 L135 110 C135 145 90 160 90 160 C90 160 45 145 45 110 L45 55 Z' fill='%231e293b' stroke='%23f59e0b' stroke-width='3' opacity='0.9'/><text x='90' y='105' font-family='system-ui, -apple-system, sans-serif' font-size='24' font-weight='900' fill='%23ffffff' text-anchor='middle' letter-spacing='1.5'>MVFI</text><text x='90' y='128' font-family='system-ui, -apple-system, sans-serif' font-size='10' font-weight='700' fill='%23f59e0b' text-anchor='middle' letter-spacing='2'>CONTROL</text></svg>">
+
+    <style>
+        :root {
+            --primary-50: #eff6ff;  --primary-100: #dbeafe; --primary-200: #bfdbfe;
+            --primary-300: #93c5fd; --primary-400: #60a5fa; --primary-500: #3b82f6;
+            --primary-600: #2563eb; --primary-700: #1d4ed8; --primary-800: #1e40af; --primary-900: #1e3a8a;
+
+            --accent-50: #fffbeb;   --accent-100: #fef3c7; --accent-200: #fde68a;
+            --accent-300: #fcd34d;  --accent-400: #fbbf24; --accent-500: #f59e0b;
+            --accent-600: #d97706;  --accent-700: #b45309;
+
+            --success-50: #f0fdf4;  --success-500: #22c55e; --success-600: #16a34a; --success-700: #15803d;
+            --warning-50: #fffbeb; --warning-500: #f59e0b; --warning-600: #d97706;
+            --danger-50: #fef2f2;   --danger-500: #ef4444;  --danger-600: #dc2626;  --danger-700: #b91c1c;
+
+            --neutral-0: #ffffff;   --neutral-50: #f8fafc;  --neutral-100: #f1f5f9;
+            --neutral-200: #e2e8f0; --neutral-300: #cbd5e1; --neutral-400: #94a3b8;
+            --neutral-500: #64748b; --neutral-600: #475569; --neutral-700: #334155;
+            --neutral-800: #1e293b; --neutral-900: #0f172a; --neutral-950: #020617;
+
+            --bg-main: var(--neutral-50);
+            --bg-card: var(--neutral-0);
+            --bg-box: var(--neutral-100);
+            --text-main: var(--neutral-800);
+            --text-muted: var(--neutral-500);
+            --text-box: var(--neutral-700);
+            --border: var(--neutral-200);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-main: var(--neutral-900);
+            --bg-card: var(--neutral-800);
+            --bg-box: var(--neutral-700);
+            --text-main: var(--neutral-50);
+            --text-muted: var(--neutral-400);
+            --text-box: var(--neutral-100);
+            --border: var(--neutral-700);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            transition: background-color var(--transition), color var(--transition);
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.5;
+        }
+
+        header {
+            background-color: var(--bg-card);
+            padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: var(--shadow-sm);
+            transition: background-color var(--transition);
+        }
+
+        @media(min-width: 640px) {
+            header { flex-direction: row; justify-content: space-between; align-items: center; }
+        }
+
+        .header-title { display: flex; align-items: center; gap: 0.6rem; }
+        .header-title h1 { font-size: 1.2rem; margin: 0; font-weight: 800; letter-spacing: -0.02em; }
+        .header-title .logo-badge {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--neutral-900), var(--neutral-800));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 900; color: var(--accent-500);
+            letter-spacing: 1px; flex-shrink: 0;
+            border: 1px solid var(--accent-500);
+        }
+        .header-subtitle { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+        .header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        .btn {
+            background-color: var(--primary-600);
+            color: white; border: none;
+            padding: 0.625rem 1.125rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            font-size: 0.875rem; justify-content: center;
+            transition: transform var(--transition), box-shadow var(--transition), background-color var(--transition);
+            box-shadow: var(--shadow-sm);
+            white-space: nowrap;
+            -webkit-touch-callout: none; user-select: none;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
+        .btn-secondary { background-color: var(--neutral-600); }
+        .btn-success { background-color: var(--success-600); }
+        .btn-danger { background-color: var(--danger-600); }
+        .btn-warning { background-color: var(--warning-600); }
+        .btn-accent { background-color: var(--accent-600); }
+        .btn-ghost { background-color: transparent; color: var(--text-main); box-shadow: none; border: 1px solid var(--border); }
+        .btn-ghost:hover { background-color: var(--bg-box); box-shadow: none; }
+        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+        .btn-icon { padding: 0.35rem; width: 32px; height: 32px; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+
+        .card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+            margin-bottom: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow var(--transition), background-color var(--transition);
+            animation: fadeInUp 0.3s ease;
+        }
+        .card h2 { margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 700; }
+        .card h3 { margin: 0 0 0.75rem 0; font-size: 1rem; font-weight: 700; }
+        .card h4 { margin: 0 0 0.5rem 0; font-size: 0.9rem; font-weight: 700; }
+        .card .subtitle { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 1rem 0; }
+
+        .tabs {
+            display: flex; gap: 0.25rem;
+            margin-bottom: 1.25rem;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            border-bottom: 2px solid var(--border);
+            scrollbar-width: thin;
+        }
+        .tabs::-webkit-scrollbar { height: 3px; }
+        .tabs::-webkit-scrollbar-thumb { background: var(--neutral-300); border-radius: 2px; }
+
+        .tab {
+            padding: 0.625rem 1rem;
+            background: transparent; border: none;
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; white-space: nowrap;
+            color: var(--text-muted);
+            transition: color var(--transition), background-color var(--transition);
+            position: relative; bottom: -2px;
+            border-bottom: 2px solid transparent;
+            -webkit-touch-callout: none; user-select: none;
+        }
+        .tab:hover { color: var(--text-main); background-color: var(--bg-box); }
+        .tab.active {
+            color: var(--primary-600);
+            border-bottom-color: var(--primary-600);
+            font-weight: 700;
+        }
+        [data-theme="dark"] .tab.active { color: var(--primary-400); border-bottom-color: var(--primary-400); }
+
+        .controls-row {
+            display: flex; gap: 0.75rem;
+            margin-bottom: 1rem; flex-wrap: wrap; align-items: flex-end;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 140px; }
+        .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+        input, select, textarea {
+            background-color: var(--bg-main); color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.625rem 0.75rem; border-radius: var(--radius-sm);
+            font-size: 0.9rem; font-family: inherit;
+            transition: border-color var(--transition), box-shadow var(--transition);
+            width: 100%;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        input[type="date"], input[type="time"] { min-height: 42px; }
+
+        .servicio-block {
+            border-left: 4px solid var(--primary-500);
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.3s ease;
+        }
+        .servicio-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;
+        }
+        .servicio-header strong { text-transform: capitalize; font-size: 1.05rem; }
+
+        .grid-roles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+        .role-box {
+            background-color: var(--bg-box); color: var(--text-box);
+            border-radius: var(--radius-sm); padding: 0.75rem;
+            display: flex; flex-direction: column; gap: 0.4rem;
+            border: 1px solid var(--border);
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .role-box:hover { border-color: var(--primary-400); box-shadow: var(--shadow-sm); }
+        .role-tag {
+            font-size: 0.75rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--primary-600);
+        }
+        [data-theme="dark"] .role-tag { color: var(--primary-400); }
+        .role-box select { padding: 0.4rem 0.5rem; font-size: 0.85rem; }
+
+        .anuncio-block {
+            border-left: 4px solid var(--accent-500);
+            padding: 0.875rem;
+            margin-bottom: 0.75rem;
+            background-color: var(--bg-box);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-500);
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .item-list { list-style: none; padding: 0; margin: 0; }
+        .item-list li {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.625rem 0; border-bottom: 1px solid var(--border);
+            animation: fadeInUp 0.2s ease;
+        }
+        .item-list li:last-child { border-bottom: none; }
+
+        .historial-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.875rem; background-color: var(--bg-box);
+            border-radius: var(--radius-sm); margin-bottom: 0.5rem;
+            border: 1px solid var(--border); flex-wrap: wrap; gap: 0.75rem;
+            transition: border-color var(--transition);
+            animation: fadeInUp 0.3s ease;
+        }
+        .historial-item:hover { border-color: var(--primary-400); }
+
+        .badge {
+            padding: 0.25rem 0.65rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 0.3rem;
+        }
+        .badge-draft { background: var(--neutral-100); color: var(--neutral-600); }
+        .badge-saved { background: var(--success-50); color: var(--success-700); }
+        [data-theme="dark"] .badge-draft { background: var(--neutral-700); color: var(--neutral-300); }
+        [data-theme="dark"] .badge-saved { background: rgba(34,197,94,0.15); color: var(--success-500); }
+
+        .banner-filtro {
+            background: var(--accent-50);
+            border: 1px solid var(--accent-200);
+            color: var(--accent-700);
+        }
+        [data-theme="dark"] .banner-filtro {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: var(--accent-400);
+        }
+
+        .stats-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+        .stats-table th {
+            padding: 0.625rem; border-bottom: 2px solid var(--border);
+            color: var(--text-muted); font-weight: 600; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .stats-table td { padding: 0.625rem; border-bottom: 1px solid var(--border); }
+        .stats-table tr:hover td { background-color: var(--bg-box); }
+        .stats-table tr { animation: fadeInUp 0.2s ease; }
+
+        #toast-container {
+            position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+            z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem;
+            pointer-events: none; width: 90%; max-width: 400px;
+        }
+        .toast {
+            background: var(--neutral-900); color: var(--neutral-50);
+            padding: 0.75rem 1.25rem; border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg); font-size: 0.875rem; font-weight: 500;
+            display: flex; align-items: center; gap: 0.5rem;
+            animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: auto;
+        }
+        .toast.toast-success { background: var(--success-600); }
+        .toast.toast-error { background: var(--danger-600); }
+        .toast.toast-warning { background: var(--warning-600); }
+        .toast.toast-info { background: var(--primary-600); }
+        .toast.fade-out { animation: toastOut 0.3s ease forwards; }
+
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 1rem;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-box {
+            background: var(--bg-card); border-radius: var(--radius-lg);
+            padding: 1.5rem; max-width: 420px; width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-box h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700; }
+        .modal-box p { margin: 0 0 1.25rem 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+        .modal-box input { margin-bottom: 1rem; }
+        .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+
+        .empty-state {
+            text-align: center; padding: 2.5rem 1rem;
+            color: var(--text-muted); font-size: 0.9rem;
+        }
+        .empty-state .empty-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes toastOut { to { opacity: 0; transform: translateY(-20px) scale(0.95); } }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        .view-panel { animation: fadeIn 0.25s ease; }
+
+        @media print {
+            body { background: white; color: black; }
+            header, .no-print, .btn, .tabs, .controls-row, form, #toast-container, .modal-overlay { display: none !important; }
+            .card { border: none; box-shadow: none; padding: 0; }
+            .servicio-block { page-break-inside: avoid; border-left-color: #000; }
+            select { border: none; background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none; padding: 0; font-weight: bold; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <div id="toast-container"></div>
+
+    <header>
+        <div>
+            <div class="header-title">
+                <div class="logo-badge">MVFI</div>
+                <div>
+                    <h1>Control de Asignaciones</h1>
+                    <div class="header-subtitle" id="db-status">Guardado Automatico</div>
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-ghost no-print" onclick="toggleTheme()" id="theme-toggle">Modo Oscuro</button>
+            <button class="btn btn-success" onclick="ejecutarCompartirConValidacion()">Compartir Roles</button>
+            <button class="btn" onclick="ejecutarImprimirConValidacion()">Guardar PDF / Imprimir</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <main>
+            <div class="tabs no-print" id="tab-bar">
+                <div class="tab active" data-tab="cronograma">Cronograma</div>
+                <div class="tab" data-tab="anuncios">Anuncios</div>
+                <div class="tab" data-tab="historialTab">Historial</div>
+                <div class="tab" data-tab="lideres">Lideres</div>
+                <div class="tab" data-tab="funciones">Funciones</div>
+                <div class="tab" data-tab="estadisticas">Metricas</div>
+                <div class="tab" data-tab="config">Respaldos</div>
+            </div>
+
+            <!-- CRONOGRAMA -->
+            <section id="sec-cronograma" class="view-panel">
+                <div class="card no-print">
+                    <h3>1. Planificacion Automatica (Domingos y Lunes)</h3>
+                    <div class="controls-row">
+                        <div class="form-group">
+                            <label>Mes:</label>
+                            <select id="select-mes-desplegable">
+                                <option value="01">ENERO</option><option value="02">FEBRERO</option>
+                                <option value="03">MARZO</option><option value="04">ABRIL</option>
+                                <option value="05">MAYO</option><option value="06">JUNIO</option>
+                                <option value="07">JULIO</option><option value="08">AGOSTO</option>
+                                <option value="09">SEPTIEMBRE</option><option value="10">OCTUBRE</option>
+                                <option value="11">NOVIEMBRE</option><option value="12">DICIEMBRE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ano:</label>
+                            <select id="select-anio-desplegable"></select>
+                        </div>
+                        <button class="btn" onclick="generarMes()">Auto-Generar Mes</button>
+                        <button class="btn btn-success" onclick="guardarMesFijo()">Guardar Mes en Historial</button>
+                        <button class="btn btn-danger" onclick="borrarTodo()">Vaciar Mes</button>
+                    </div>
+                </div>
+
+                <div class="card no-print">
+                    <h3>2. Crear Servicio Especial</h3>
+                    <form onsubmit="crearServicioEspecial(event)" class="controls-row">
+                        <div class="form-group" style="max-width: 180px;">
+                            <label>Fecha:</label>
+                            <input type="date" id="especial-fecha" required>
+                        </div>
+                        <div class="form-group" style="flex:2;">
+                            <label>Nombre del Servicio:</label>
+                            <input type="text" id="especial-nombre" placeholder="Ej. Jueves de Avivamiento..." required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Anadir Servicio</button>
+                    </form>
+                </div>
+
+                <div class="card no-print banner-filtro" id="banner-filtro-edicion-unica" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                        <span id="texto-banner-edicion">Modo <strong>Edicion Focalizada</strong> activo.</span>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="btn btn-success btn-sm" id="btn-guardar-cambios-focalizados" style="display:none;" onclick="forzarGuardadoYActualizacion()">Guardar Cambios</button>
+                            <button class="btn btn-warning btn-sm" onclick="removerFiltroEdicionUnica()">Mostrar Todo el Mes</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="cronograma-imprimible">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                        <h2 id="titulo-mes-actual" style="margin:0;">Servicios Planificados</h2>
+                        <span id="badge-guardado" class="no-print badge badge-draft">Borrador Temporal</span>
+                    </div>
+                    <div id="servicios-lista" style="margin-top: 1rem;"></div>
+                </div>
+            </section>
+
+            <!-- ANUNCIOS -->
+            <section id="sec-anuncios" class="view-panel" style="display:none;">
+                <div class="card">
+                    <h2>Anuncios Generales y Especiales</h2>
+                    <p class="subtitle">Lista Base de actividades combinada con eventos especiales del mes seleccionado.</p>
+
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+                        <div style="flex:1; min-width:260px; background:var(--bg-box); padding:1rem; border-radius:var(--radius-sm);">
+                            <h4 style="color:var(--primary-600);">Anuncios Generales Basicos</h4>
+                            <ul class="item-list" style="font-size:0.875rem;">
+                                <li>Lunes: Aposento Alto (7:30pm)</li>
+                                <li>Miercoles: EVC (7:30pm)</li>
+                                <li>Viernes: Vision Youth</li>
+                                <li>Sabados: Evangelismo Sobrenatural</li>
+                                <li>Domingos: Celebracion al Rey</li>
+                            </ul>
+                        </div>
+
+                        <div style="flex:1; min-width:260px; background:var(--bg-box); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                            <h4 style="color:var(--accent-600);">Agregar Anuncio Especial</h4>
+                            <form onsubmit="agregarAnuncioEspecial(event)">
+                                <div class="form-group" style="margin-bottom:0.5rem;">
+                                    <label>Titulo:</label>
+                                    <input type="text" id="anuncio-titulo" placeholder="Ej: Retiro, Vigilia, Ayuno..." required>
+                                </div>
+                                <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+                                    <div class="form-group">
+                                        <label>Fecha:</label>
+                                        <input type="date" id="anuncio-fecha" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Hora:</label>
+                                        <input type="time" id="anuncio-hora" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-accent" style="width:100%;">Guardar Anuncio Especial</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="controls-row" style="border-top:1px solid var(--border); padding-top:1rem;">
+                        <button class="btn btn-success" onclick="compartirAnuncios()">Compartir Todos los Anuncios</button>
+                        <button class="btn btn-danger" onclick="limpiarAnunciosEspecialesMes()">Vaciar Especiales del Mes</button>
+                    </div>
+
+                    <h3 style="margin-top:1.5rem;">Anuncios Planificados del Mes</h3>
+                    <div id="anuncios-mes-lista"></div>
+                </div>
+            </section>
+
+            <!-- HISTORIAL -->
+            <section id="sec-historialTab" class="view-panel" style="display:none;">
+                <div class="card">
+                    <h2>Historial de Cronogramas Guardados</h2>
+                    <p class="subtitle">Administra, edita, visualiza o comparte datos consolidados de meses especificos.</p>
+                    <div id="lista-historial-meses"></div>
+                </div>
+
+                <div class="card" id="modulo-edicion-historial-card" style="display:none; border:2px solid var(--accent-500);">
+                    <h3 id="titulo-edicion-modulo" style="color:var(--accent-600);">Opciones de Edicion</h3>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin:0 0 1rem 0;">Selecciona como deseas proceder con los cambios en este mes:</p>
+                    <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; background:var(--bg-main); padding:1rem; border-radius:var(--radius-sm);">
+                        <button class="btn btn-accent" id="btn-editar-mes-completo-exec">Editar Todo el Mes</button>
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:240px; border-left:2px solid var(--border); padding-left:1rem;">
+                            <select id="select-editar-dia-unico" style="flex:1;"></select>
+                            <button class="btn" id="btn-editar-dia-individual-exec">Editar este Dia</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" onclick="document.getElementById('modulo-edicion-historial-card').style.display='none'">Cancelar</button>
+                </div>
+
+                <div class="card" id="vista-previa-historial-card" style="display:none; border:2px solid var(--primary-500);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                        <h3 id="titulo-vista-historial" style="margin:0; color:var(--primary-600);">Mostrando Registro</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('vista-previa-historial-card').style.display='none'">Cerrar Vista</button>
+                    </div>
+
+                    <div style="background:var(--bg-main); padding:1rem; border-radius:var(--radius-sm); margin-bottom:1.5rem; border:1px dashed var(--border);">
+                        <h4 style="font-size:0.9rem;">Compartir un solo Dia Especifico:</h4>
+                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-top:0.5rem;">
+                            <select id="select-compartir-dia-unico" style="flex:1; min-width:180px;"></select>
+                            <button class="btn btn-success btn-sm" onclick="compartirDiaUnicoHistorial()">Compartir Dia Elegido</button>
+                        </div>
+                    </div>
+
+                    <div id="cuerpo-vista-historial"></div>
+                </div>
+            </section>
+
+            <!-- LIDERES -->
+            <section id="sec-lideres" class="view-panel" style="display:none;">
+                <div class="card">
+                    <h2>Registrar Lider de Servicio</h2>
+                    <form onsubmit="agregarLider(event)" style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+                        <input type="text" id="nuevo-lider-nombre" placeholder="Nombre del lider..." required style="flex:1; min-width:200px;">
+                        <button type="submit" class="btn">Agregar</button>
+                    </form>
+                    <ul id="lista-lideres-render" class="item-list" style="margin-top:1.5rem;"></ul>
+                </div>
+            </section>
+
+            <!-- FUNCIONES -->
+            <section id="sec-funciones" class="view-panel" style="display:none;">
+                <div class="card">
+                    <h2>Crear Nuevas Funciones / Asignaciones</h2>
+                    <p class="subtitle">Las funciones agregadas se integraran en la plantilla base.</p>
+                    <form onsubmit="agregarFuncion(event)" style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+                        <input type="text" id="nueva-funcion-nombre" placeholder="Nombre de la funcion..." required style="flex:1; min-width:200px;">
+                        <button type="submit" class="btn">Crear Funcion</button>
+                    </form>
+                    <h3 style="margin-top:1.5rem;">Funciones Activas en Plantilla Base:</h3>
+                    <ul id="lista-funciones-render" class="item-list"></ul>
+                </div>
+            </section>
+
+            <!-- ESTADISTICAS -->
+            <section id="sec-estadisticas" class="view-panel" style="display:none;">
+                <div class="card">
+                    <h2>Historial y Frecuencia de Participacion</h2>
+                    <div style="overflow-x:auto; margin-top:1rem;">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Lider</th>
+                                    <th>Participaciones</th>
+                                    <th>Ultima Asignacion</th>
+                                    <th>Funcion Habitual</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-estadisticas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RESPALDO -->
+            <section id="sec-config" class="view-panel" style="display:none;">
+                <div class="card">
+                    <h2>Copia de Seguridad de la Iglesia</h2>
+                    <p class="subtitle">Exporta o importa todos los datos de la aplicacion.</p>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
+                        <button class="btn" onclick="exportarJSON()">Descargar Respaldo JSON</button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">Subir/Restaurar Respaldo</button>
+                        <input type="file" id="file-input" style="display:none;" onchange="importarJSON(event)">
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // ============ STATE ============
+        let appData = {
+            lideres: ["Pastor Juan", "Maria Cantora", "Andres Diacono", "Elena Ujier", "Carlos Lider"],
+            funciones: ["Alabanza", "Predica", "Ofrendas", "Anuncios y Cierre"],
+            cronograma: [],
+            anunciosEspeciales: [],
+            mesesGuardados: {}
+        };
+
+        let idDiaEdicionFocalizada = null;
+        let cambiosPendientes = false;
+
+        const STORAGE_KEY = 'iglesia_v13_db';
+        const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+        // ============ UTILITIES ============
+        function esc(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        function genId(prefix) {
+            return (prefix || 'id_') + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        function formatDate(fechaStr, opts) {
+            const d = new Date(fechaStr + "T00:00:00");
+            return d.toLocaleDateString('es-ES', opts || { weekday: 'long', day: 'numeric' });
+        }
+
+        function formatDateShort(fechaStr) {
+            return formatDate(fechaStr, { day: 'numeric', month: 'short' });
+        }
+
+        function formatDateFull(fechaStr) {
+            return formatDate(fechaStr, { weekday: 'long', day: 'numeric', month: 'long' });
+        }
+
+        function getMonthName(mesStr) {
+            return MONTH_NAMES[parseInt(mesStr) - 1];
+        }
+
+        // ============ TOAST ============
+        function toast(msg, type) {
+            type = type || 'info';
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast toast-' + type;
+            const icons = { success: '\u2713', error: '\u2717', warning: '!', info: 'i' };
+            el.innerHTML = '<span style="font-weight:900; font-size:1rem;">' + icons[type] + '</span> ' + esc(msg);
+            container.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('fade-out');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+
+        // ============ MODAL ============
+        function modalConfirm(title, message) {
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML =
+                    '<div class="modal-box">' +
+                        '<h3>' + esc(title) + '</h3>' +
+                        '<p>' + esc(message) + '</p>' +
+                        '<div class="modal-actions">' +
+                            '<button class="btn btn-ghost" data-action="cancel">Cancelar</button>' +
+                            '<button class="btn btn-danger" data-action="confirm">Confirmar</button>' +
+                        '</div>' +
+                    '</div>';
+                document.body.appendChild(overlay);
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) { overlay.remove(); resolve(false); }
+                    const action = e.target.dataset.action;
+                    if (action === 'cancel') { overlay.remove(); resolve(false); }
+                    if (action === 'confirm') { overlay.remove(); resolve(true); }
+                });
+            });
+        }
+
+        function modalPrompt(title, label, defaultValue) {
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML =
+                    '<div class="modal-box">' +
+                        '<h3>' + esc(title) + '</h3>' +
+                        '<p>' + esc(label) + '</p>' +
+                        '<input type="text" id="modal-input" value="' + esc(defaultValue || '') + '">' +
+                        '<div class="modal-actions">' +
+                            '<button class="btn btn-ghost" data-action="cancel">Cancelar</button>' +
+                            '<button class="btn" data-action="confirm">Aceptar</button>' +
+                        '</div>' +
+                    '</div>';
+                document.body.appendChild(overlay);
+                const input = overlay.querySelector('#modal-input');
+                input.focus(); input.select();
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') { overlay.remove(); resolve(input.value.trim()); }
+                    if (e.key === 'Escape') { overlay.remove(); resolve(null); }
+                });
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) { overlay.remove(); resolve(null); }
+                    const action = e.target.dataset.action;
+                    if (action === 'cancel') { overlay.remove(); resolve(null); }
+                    if (action === 'confirm') { overlay.remove(); resolve(input.value.trim()); }
+                });
+            });
+        }
+
+        function modalPromptSelect(title, message, options) {
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                let optsHtml = options.map((o, i) => '<option value="' + i + '">' + esc(o) + '</option>').join('');
+                overlay.innerHTML =
+                    '<div class="modal-box">' +
+                        '<h3>' + esc(title) + '</h3>' +
+                        '<p>' + esc(message) + '</p>' +
+                        '<select id="modal-select">' + optsHtml + '</select>' +
+                        '<div class="modal-actions">' +
+                            '<button class="btn btn-ghost" data-action="cancel">Cancelar</button>' +
+                            '<button class="btn" data-action="confirm">Aceptar</button>' +
+                        '</div>' +
+                    '</div>';
+                document.body.appendChild(overlay);
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) { overlay.remove(); resolve(null); }
+                    const action = e.target.dataset.action;
+                    if (action === 'cancel') { overlay.remove(); resolve(null); }
+                    if (action === 'confirm') { overlay.remove(); resolve(overlay.querySelector('#modal-select').value); }
+                });
+            });
+        }
+
+        // ============ STORAGE ============
+        function guardarLocal() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            const status = document.getElementById('db-status');
+            status.innerText = "Guardado en este dispositivo";
+            setTimeout(() => { status.innerText = "Guardado Automatico"; }, 2500);
+        }
+
+        // ============ INIT ============
+        window.addEventListener('DOMContentLoaded', () => {
+            const selectAnio = document.getElementById('select-anio-desplegable');
+            const añoActual = 2026;
+            for (let a = añoActual; a <= 2099; a++) {
+                let opt = document.createElement('option');
+                opt.value = a; opt.textContent = a; selectAnio.appendChild(opt);
+            }
+
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                    if (!appData.mesesGuardados) appData.mesesGuardados = {};
+                    if (!appData.anunciosEspeciales) appData.anunciosEspeciales = [];
+                    if (!appData.lideres) appData.lideres = [];
+                    if (!appData.funciones) appData.funciones = [];
+                    if (!appData.cronograma) appData.cronograma = [];
+                } catch(e) { console.error('Error parsing saved data', e); }
+            } else {
+                guardarLocal();
+            }
+
+            const hoy = new Date();
+            document.getElementById('select-mes-desplegable').value = String(hoy.getMonth() + 1).padStart(2, '0');
+            document.getElementById('select-anio-desplegable').value = String(hoy.getFullYear());
+
+            document.getElementById('select-mes-desplegable').addEventListener('change', () => { removerFiltroEdicionUnica(); renderCronograma(); renderAnunciosPanel(); });
+            document.getElementById('select-anio-desplegable').addEventListener('change', () => { removerFiltroEdicionUnica(); renderCronograma(); renderAnunciosPanel(); });
+
+            document.getElementById('tab-bar').addEventListener('click', e => {
+                if (e.target.classList.contains('tab')) switchTab(e.target.dataset.tab);
+            });
+
+            document.addEventListener('click', handleDelegatedClick);
+            document.addEventListener('change', handleDelegatedChange);
+
+            renderTodo();
+        });
+
+        // ============ EVENT DELEGATION ============
+        function handleDelegatedClick(e) {
+            const action = e.target.dataset.action;
+            if (!action) return;
+
+            const servId = e.target.dataset.servId;
+            const ministerio = e.target.dataset.ministerio;
+            const lider = e.target.dataset.lider;
+            const anuncioId = e.target.dataset.anuncioId;
+            const mesCodigo = e.target.dataset.mesCodigo;
+            const mesNombre = e.target.dataset.mesNombre;
+
+            switch(action) {
+                case 'eliminar-dia': eliminarDia(servId); break;
+                case 'quitar-funcion': quitarFuncionDeServicioSpecifico(servId, ministerio); break;
+                case 'eliminar-anuncio': eliminarAnuncioEspecial(anuncioId); break;
+                case 'eliminar-lider': eliminarLider(lider); break;
+                case 'editar-lider': editarLider(lider); break;
+                case 'eliminar-funcion': eliminarFuncion(e.target.dataset.funcion); break;
+                case 'ver-detalle-historial': verDetalleHistorial(mesCodigo, mesNombre); break;
+                case 'editar-historial': desplegarMenuEdicionHistorial(mesCodigo, mesNombre); break;
+                case 'compartir-mes-historial': compartirMesHistorialCompleto(mesCodigo); break;
+                case 'eliminar-mes-historial': eliminarMesHistorial(mesCodigo); break;
+            }
+        }
+
+        function handleDelegatedChange(e) {
+            const action = e.target.dataset.action;
+            if (!action) return;
+            if (action === 'asignar-lider') {
+                asignarLider(e.target.dataset.servId, e.target.dataset.ministerio, e.target.value);
+            }
+        }
+
+        // ============ CORE FUNCTIONS ============
+        function obtenerCodigoMesActivo() {
+            const m = document.getElementById('select-mes-desplegable').value;
+            const a = document.getElementById('select-anio-desplegable').value;
+            return a + '-' + m;
+        }
+
+        function renderTodo() {
+            renderCronograma(); renderAnunciosPanel(); renderLideres(); renderFunciones(); calcularEstadisticas(); renderHistorialTab();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const panel = document.getElementById('sec-' + tabName);
+            if (panel) panel.style.display = 'block';
+            const tab = document.querySelector('.tab[data-tab="' + tabName + '"]');
+            if (tab) tab.classList.add('active');
+
+            if (tabName === 'estadisticas') calcularEstadisticas();
+            if (tabName === 'historialTab') renderHistorialTab();
+            if (tabName === 'anuncios') renderAnunciosPanel();
+            if (tabName === 'lideres') renderLideres();
+            if (tabName === 'cronograma') renderCronograma();
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            document.getElementById('theme-toggle').textContent = isDark ? 'Modo Oscuro' : 'Modo Claro';
+        }
+
+        // ============ VALIDATION ============
+        async function validarAsignacionesCompletas() {
+            const filtroMes = obtenerCodigoMesActivo();
+            const filtrados = appData.cronograma.filter(s => s.fecha.startsWith(filtroMes));
+            if (filtrados.length === 0) return true;
+
+            let vacios = [];
+            filtrados.forEach(serv => {
+                serv.roles.forEach(r => {
+                    if (!r.lider || r.lider.trim() === '') {
+                        const fechaLegible = formatDateShort(serv.fecha);
+                        vacios.push(fechaLegible + ' (' + serv.tipo + ') -> ' + r.ministerio);
+                    }
+                });
+            });
+
+            if (vacios.length > 0) {
+                const mensaje = 'Quedan puestos sin lider asignado en este mes:\n\n' +
+                    vacios.slice(0, 6).join('\n') +
+                    (vacios.length > 6 ? '\n... y ' + (vacios.length - 6) + ' posiciones mas.' : '') +
+                    '\n\nDeseas continuar de todos modos?';
+                return await modalConfirm('Asignaciones vacias detectadas', mensaje);
+            }
+            return true;
+        }
+
+        function ejecutarCompartirConValidacion() {
+            validarAsignacionesCompletas().then(ok => { if (ok) compartirCronograma(); });
+        }
+
+        function ejecutarImprimirConValidacion() {
+            validarAsignacionesCompletas().then(ok => { if (ok) window.print(); });
+        }
+
+        // ============ ANUNCIOS ============
+        function agregarAnuncioEspecial(e) {
+            e.preventDefault();
+            const titulo = document.getElementById('anuncio-titulo').value.trim();
+            const fecha = document.getElementById('anuncio-fecha').value;
+            const hora = document.getElementById('anuncio-hora').value;
+            if (!titulo || !fecha || !hora) return;
+
+            appData.anunciosEspeciales.push({ id: genId('an_'), titulo: titulo, fecha: fecha, hora: hora });
+            document.getElementById('select-mes-desplegable').value = fecha.slice(5, 7);
+            document.getElementById('select-anio-desplegable').value = fecha.slice(0, 4);
+            document.getElementById('anuncio-titulo').value = '';
+            document.getElementById('anuncio-fecha').value = '';
+            document.getElementById('anuncio-hora').value = '';
+            guardarLocal(); renderAnunciosPanel();
+            toast('Anuncio especial registrado', 'success');
+        }
+
+        function renderAnunciosPanel() {
+            const cont = document.getElementById('anuncios-mes-lista');
+            if (!cont) return;
+            cont.innerHTML = '';
+            const filtroMes = obtenerCodigoMesActivo();
+            const especiales = appData.anunciosEspeciales
+                .filter(a => a.fecha.startsWith(filtroMes))
+                .sort((a, b) => new Date(a.fecha + 'T' + a.hora) - new Date(b.fecha + 'T' + b.hora));
+
+            if (especiales.length === 0) {
+                cont.innerHTML = '<div class="empty-state"><span class="empty-icon">\u00A0</span>No hay anuncios especiales para este mes.</div>';
+                return;
+            }
+
+            especiales.forEach(an => {
+                const fLegible = formatDate(an.fecha, { weekday: 'long', day: 'numeric', month: 'short' });
+                const div = document.createElement('div');
+                div.className = 'anuncio-block';
+                div.innerHTML =
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<div>' +
+                            '<strong style="color:var(--accent-600); text-transform:uppercase;">' + esc(an.titulo) + '</strong><br>' +
+                            '<span style="font-size:0.85rem; color:var(--text-box);">' + esc(fLegible) + ' - ' + esc(an.hora) + ' hrs</span>' +
+                        '</div>' +
+                        '<button class="btn btn-danger btn-icon" data-action="eliminar-anuncio" data-anuncio-id="' + esc(an.id) + '">x</button>' +
+                    '</div>';
+                cont.appendChild(div);
+            });
+        }
+
+        async function eliminarAnuncioEspecial(id) {
+            if (await modalConfirm('Remover anuncio', 'Deseas remover este anuncio especial?')) {
+                appData.anunciosEspeciales = appData.anunciosEspeciales.filter(a => a.id !== id);
+                guardarLocal(); renderAnunciosPanel();
+                toast('Anuncio removido', 'success');
+            }
+        }
+
+        async function limpiarAnunciosEspecialesMes() {
+            if (await modalConfirm('Vaciar especiales', 'Eliminar todos los anuncios especiales de este mes?')) {
+                const filtroMes = obtenerCodigoMesActivo();
+                appData.anunciosEspeciales = appData.anunciosEspeciales.filter(a => !a.fecha.startsWith(filtroMes));
+                guardarLocal(); renderAnunciosPanel();
+                toast('Anuncios especiales vaciados', 'success');
+            }
+        }
+
+        function compartirAnuncios() {
+            const filtroMes = obtenerCodigoMesActivo();
+            const [anio, mesStr] = filtroMes.split('-');
+            const mesLegible = getMonthName(mesStr) + ' ' + anio;
+
+            let txt = 'ANUNCIOS Y ACTIVIDADES - ' + mesLegible.toUpperCase() + '\n\nACTIVIDADES GENERALES:\n- Lunes: Aposento Alto (7:30pm)\n- Miercoles: EVC (7:30pm)\n- Viernes: Vision Youth\n- Sabados: Evangelismo Sobrenatural\n- Domingos: Celebracion al Rey\n\n';
+            const especiales = appData.anunciosEspeciales.filter(a => a.fecha.startsWith(filtroMes));
+
+            if (especiales.length > 0) {
+                especiales.sort((a, b) => new Date(a.fecha + 'T' + a.hora) - new Date(b.fecha + 'T' + b.hora));
+                txt += 'EVENTOS Y ANUNCIOS ESPECIALES:\n';
+                especiales.forEach(an => {
+                    const fLegible = formatDateShort(an.fecha);
+                    txt += '- ' + an.titulo + ' -> ' + fLegible + ' | ' + an.hora + '\n';
+                });
+            }
+
+            shareText(txt, 'Anuncios');
+        }
+
+        // ============ CRONOGRAMA ============
+        function renderCronograma() {
+            const listaDiv = document.getElementById('servicios-lista');
+            if (!listaDiv) return;
+            const badge = document.getElementById('badge-guardado');
+            const bannerFiltro = document.getElementById('banner-filtro-edicion-unica');
+            const btnGuardarFlotante = document.getElementById('btn-guardar-cambios-focalizados');
+            const textoBanner = document.getElementById('texto-banner-edicion');
+
+            listaDiv.innerHTML = '';
+            const filtroMes = obtenerCodigoMesActivo();
+            const [anio, mesStr] = filtroMes.split('-');
+            const mesLegible = getMonthName(mesStr) + ' ' + anio;
+            document.getElementById('titulo-mes-actual').textContent = 'Cronograma: ' + mesLegible;
+
+            if (appData.mesesGuardados && appData.mesesGuardados[filtroMes]) {
+                badge.textContent = 'Guardado en Historial';
+                badge.className = 'no-print badge badge-saved';
+            } else {
+                badge.textContent = 'Borrador Temporal';
+                badge.className = 'no-print badge badge-draft';
+            }
+
+            let filtrados = appData.cronograma.filter(s => s.fecha.startsWith(filtroMes));
+
+            if (idDiaEdicionFocalizada) {
+                filtrados = filtrados.filter(s => s.id === idDiaEdicionFocalizada);
+                bannerFiltro.style.display = 'block';
+                if (cambiosPendientes) {
+                    textoBanner.innerHTML = '<strong>Cambios sin guardar</strong> detectados en la edicion de este dia.';
+                    btnGuardarFlotante.style.display = 'inline-flex';
+                } else {
+                    textoBanner.innerHTML = 'Modo <strong>Edicion Focalizada</strong> activo. Visualizando exclusivamente el dia seleccionado.';
+                    btnGuardarFlotante.style.display = 'none';
+                }
+            } else if (cambiosPendientes) {
+                bannerFiltro.style.display = 'block';
+                textoBanner.innerHTML = '<strong>Modificaciones detectadas</strong> en el mes. Haz clic en guardar para consolidar los cambios.';
+                btnGuardarFlotante.style.display = 'inline-flex';
+            } else {
+                bannerFiltro.style.display = 'none';
+                btnGuardarFlotante.style.display = 'none';
+            }
+
+            if (filtrados.length === 0) {
+                listaDiv.innerHTML = '<div class="empty-state"><span class="empty-icon">\u00A0</span>No hay servicios en este bloque de vista.</div>';
+                return;
+            }
+
+            filtrados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            filtrados.forEach(serv => {
+                const block = document.createElement('div');
+                block.className = 'servicio-block';
+                const diaLegible = formatDate(serv.fecha, { weekday: 'long', day: 'numeric' });
+
+                block.innerHTML =
+                    '<div class="servicio-header">' +
+                        '<strong>' + esc(diaLegible) + ' - ' + esc(serv.tipo) + '</strong>' +
+                        '<button class="btn btn-danger btn-sm no-print" data-action="eliminar-dia" data-serv-id="' + esc(serv.id) + '">Eliminar Dia</button>' +
+                    '</div>' +
+                    '<div class="grid-roles" id="grid-' + esc(serv.id) + '"></div>';
+                listaDiv.appendChild(block);
+
+                const grid = block.querySelector('#grid-' + serv.id);
+                serv.roles.forEach(r => {
+                    const rBox = document.createElement('div');
+                    rBox.className = 'role-box';
+                    let optionsLideres = '<option value="">-- Sin Asignar --</option>';
+                    appData.lideres.forEach(lid => {
+                        const selected = r.lider === lid ? 'selected' : '';
+                        const yaSirveHoy = serv.roles.some(o => o.lider === lid && o.ministerio !== r.ministerio);
+                        const label = yaSirveHoy ? lid + ' (Ocupado)' : lid;
+                        optionsLideres += '<option value="' + esc(lid) + '" ' + selected + '>' + esc(label) + '</option>';
+                    });
+
+                    rBox.innerHTML =
+                        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                            '<span class="role-tag">' + esc(r.ministerio) + '</span>' +
+                            '<button class="btn btn-danger btn-icon" style="width:24px; height:24px; font-size:0.7rem;" data-action="quitar-funcion" data-serv-id="' + esc(serv.id) + '" data-ministerio="' + esc(r.ministerio) + '">x</button>' +
+                        '</div>' +
+                        '<select data-action="asignar-lider" data-serv-id="' + esc(serv.id) + '" data-ministerio="' + esc(r.ministerio) + '">' + optionsLideres + '</select>';
+                    grid.appendChild(rBox);
+                });
+            });
+        }
+
+        function removerFiltroEdicionUnica() {
+            idDiaEdicionFocalizada = null;
+            cambiosPendientes = false;
+            renderCronograma();
+        }
+
+        function forzarGuardadoYActualizacion() {
+            guardarLocal(); cambiosPendientes = false; renderTodo();
+            toast('Cambios guardados con exito', 'success');
+        }
+
+        async function guardarMesFijo() {
+            const filtroMes = obtenerCodigoMesActivo();
+            const filtrados = appData.cronograma.filter(s => s.fecha.startsWith(filtroMes));
+            if (filtrados.length === 0) { toast('No hay servicios generados en este mes', 'warning'); return; }
+            if (!await validarAsignacionesCompletas()) return;
+
+            if (!appData.mesesGuardados) appData.mesesGuardados = {};
+            appData.mesesGuardados[filtroMes] = true;
+            cambiosPendientes = false; guardarLocal(); renderCronograma();
+            toast('Cronograma de ' + filtroMes + ' guardado en historial', 'success');
+        }
+
+        // ============ HISTORIAL ============
+        function renderHistorialTab() {
+            const container = document.getElementById('lista-historial-meses');
+            if (!container) return;
+            container.innerHTML = '';
+            const meses = Object.keys(appData.mesesGuardados || {});
+
+            if (meses.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span class="empty-icon">\u00A0</span>No hay meses consolidados en el historial.</div>';
+                return;
+            }
+
+            meses.sort().reverse();
+            meses.forEach(m => {
+                const [anio, mesStr] = m.split('-');
+                const nombreLegible = getMonthName(mesStr) + ' ' + anio;
+                const item = document.createElement('div');
+                item.className = 'historial-item';
+                item.innerHTML =
+                    '<span style="font-weight:bold; text-transform:capitalize; flex:1; min-width:140px;">' + esc(nombreLegible) + '</span>' +
+                    '<div style="display:flex; gap:0.3rem; flex-wrap:wrap;">' +
+                        '<button class="btn btn-secondary btn-sm" data-action="ver-detalle-historial" data-mes-codigo="' + esc(m) + '" data-mes-nombre="' + esc(nombreLegible) + '">Ver / Enviar Dia</button>' +
+                        '<button class="btn btn-warning btn-sm" data-action="editar-historial" data-mes-codigo="' + esc(m) + '" data-mes-nombre="' + esc(nombreLegible) + '">Editar</button>' +
+                        '<button class="btn btn-success btn-sm" data-action="compartir-mes-historial" data-mes-codigo="' + esc(m) + '">Compartir Todo</button>' +
+                        '<button class="btn btn-danger btn-icon" data-action="eliminar-mes-historial" data-mes-codigo="' + esc(m) + '">x</button>' +
+                    '</div>';
+                container.appendChild(item);
+            });
+        }
+
+        function desplegarMenuEdicionHistorial(codigoMes, nombreLegible) {
+            const moduloEdicion = document.getElementById('modulo-edicion-historial-card');
+            const selectDias = document.getElementById('select-editar-dia-unico');
+            const btnMesCompleto = document.getElementById('btn-editar-mes-completo-exec');
+            const btnDiaIndividual = document.getElementById('btn-editar-dia-individual-exec');
+
+            document.getElementById('titulo-edicion-modulo').textContent = 'Opciones de Edicion para ' + nombreLegible;
+            selectDias.innerHTML = '';
+            moduloEdicion.style.display = 'block';
+
+            const filtrados = appData.cronograma.filter(s => s.fecha.startsWith(codigoMes));
+            filtrados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            if (filtrados.length === 0) {
+                selectDias.innerHTML = '<option value="">Sin dias disponibles</option>';
+            } else {
+                filtrados.forEach(s => {
+                    const diaOp = formatDate(s.fecha, { weekday: 'long', day: 'numeric' });
+                    const opt = document.createElement('option');
+                    opt.value = s.id; opt.textContent = diaOp.toUpperCase() + ' - ' + s.tipo;
+                    selectDias.appendChild(opt);
+                });
+            }
+
+            btnMesCompleto.onclick = () => { moduloEdicion.style.display = 'none'; idDiaEdicionFocalizada = null; cambiosPendientes = true; ejecutarEdicionMesCompleto(codigoMes); };
+            btnDiaIndividual.onclick = () => {
+                const selectedDiaId = selectDias.value;
+                if (!selectedDiaId) { toast('Selecciona un dia valido', 'warning'); return; }
+                moduloEdicion.style.display = 'none'; cambiosPendientes = true; ejecutarEdicionDiaEspecifico(selectedDiaId, codigoMes);
+            };
+        }
+
+        function ejecutarEdicionMesCompleto(codigoMes) {
+            const [anio, mesStr] = codigoMes.split('-');
+            document.getElementById('select-mes-desplegable').value = mesStr;
+            document.getElementById('select-anio-desplegable').value = anio;
+            renderCronograma(); renderAnunciosPanel(); switchTab('cronograma');
+        }
+
+        function ejecutarEdicionDiaEspecifico(diaId, codigoMes) {
+            const [anio, mesStr] = codigoMes.split('-');
+            document.getElementById('select-mes-desplegable').value = mesStr;
+            document.getElementById('select-anio-desplegable').value = anio;
+            idDiaEdicionFocalizada = diaId;
+            switchTab('cronograma');
+            setTimeout(() => {
+                const listaDiv = document.getElementById('servicios-lista');
+                window.scrollTo({ top: listaDiv.offsetTop - 100, behavior: 'smooth' });
+            }, 100);
+        }
+
+        function verDetalleHistorial(codigoMes, nombreLegible) {
+            const cardPreview = document.getElementById('vista-previa-historial-card');
+            const cuerpo = document.getElementById('cuerpo-vista-historial');
+            const selectDias = document.getElementById('select-compartir-dia-unico');
+
+            document.getElementById('titulo-vista-historial').textContent = 'Historial: ' + nombreLegible;
+            cuerpo.innerHTML = ''; selectDias.innerHTML = ''; cardPreview.style.display = 'block';
+
+            const filtrados = appData.cronograma.filter(s => s.fecha.startsWith(codigoMes));
+            filtrados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            if (filtrados.length === 0) { cuerpo.innerHTML = '<p>No hay dias registrados en este bloque.</p>'; return; }
+
+            filtrados.forEach(s => {
+                const diaOp = formatDate(s.fecha, { weekday: 'long', day: 'numeric' });
+                const opt = document.createElement('option');
+                opt.value = s.id; opt.textContent = diaOp.toUpperCase() + ' - ' + s.tipo;
+                selectDias.appendChild(opt);
+            });
+
+            let html = '<h4 style="color:var(--primary-600); margin-top:0;">Asignaciones de Roles:</h4>';
+            filtrados.forEach(s => {
+                const diaL = formatDate(s.fecha, { weekday: 'short', day: 'numeric' });
+                let rolesTexto = '';
+                s.roles.forEach(r => {
+                    const liderDisplay = r.lider || 'Vacio';
+                    rolesTexto += '<span style="display:inline-block; margin-right:1rem; font-size:0.85rem;"><strong>' + esc(r.ministerio) + ':</strong> ' + esc(liderDisplay) + '</span>';
+                });
+                html += '<div style="margin-bottom:0.6rem; border-bottom:1px dashed var(--border); padding-bottom:0.4rem;"><strong>' + esc(diaL.toUpperCase()) + ' - ' + esc(s.tipo) + ':</strong><br>' + rolesTexto + '</div>';
+            });
+            cuerpo.innerHTML = html;
+        }
+
+        function compartirDiaUnicoHistorial() {
+            const diaId = document.getElementById('select-compartir-dia-unico').value;
+            if (!diaId) { toast('Selecciona un dia valido', 'warning'); return; }
+            const servicio = appData.cronograma.find(x => x.id === diaId);
+            if (!servicio) { toast('Servicio no encontrado', 'error'); return; }
+
+            const fLegible = formatDateFull(servicio.fecha);
+            let txt = 'ASIGNACION INDIVIDUAL - PARTICIPACION\n\n' + fLegible.toUpperCase() + '\nSERVICIO: ' + servicio.tipo + '\n';
+            txt += '----------------------------------------\n';
+            servicio.roles.forEach(r => {
+                txt += r.ministerio + ': ' + (r.lider || 'Sin Asignar') + '\n';
+            });
+            txt += '----------------------------------------\n\nContamos con tu valioso servicio y puntualidad!';
+
+            shareText(txt, 'Asignacion del Dia');
+        }
+
+        function compartirMesHistorialCompleto(codigoMes) {
+            const filtrados = appData.cronograma.filter(s => s.fecha.startsWith(codigoMes));
+            if (filtrados.length === 0) { toast('Sin datos para compartir', 'warning'); return; }
+            filtrados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            let txt = 'CRONOGRAMA DE ROLES COMPLETO (' + codigoMes + ')\n\n';
+            filtrados.forEach(s => {
+                const f = formatDate(s.fecha, { weekday: 'short', day: 'numeric' });
+                txt += f.toUpperCase() + ' - ' + s.tipo + '\n';
+                s.roles.forEach(r => { txt += '  ' + r.ministerio + ': ' + (r.lider || 'Vacio') + '\n'; });
+                txt += '\n';
+            });
+            shareText(txt, 'Roles Historial');
+        }
+
+        async function eliminarMesHistorial(codigoMes) {
+            if (await modalConfirm('Remover mes', 'Deseas remover definitivamente ' + codigoMes + ' del historial?')) {
+                if (appData.mesesGuardados) delete appData.mesesGuardados[codigoMes];
+                guardarLocal(); renderHistorialTab(); renderCronograma();
+                toast('Mes removido del historial', 'success');
+            }
+        }
+
+        // ============ ASIGNACIONES ============
+        function asignarLider(servId, ministerio, lider) {
+            const s = appData.cronograma.find(x => x.id === servId);
+            if (s) {
+                const r = s.roles.find(x => x.ministerio === ministerio);
+                if (r) r.lider = lider;
+                cambiosPendientes = true; guardarLocal();
+                setTimeout(renderCronograma, 50);
+            }
+        }
+
+        async function preguntarEInyectarFuncion(funcionNombre) {
+            const filtroMes = obtenerCodigoMesActivo();
+            const filtrados = appData.cronograma.filter(s => s.fecha.startsWith(filtroMes));
+            if (filtrados.length === 0) return;
+
+            const seleccion = await modalPromptSelect(
+                'Inyectar funcion',
+                'A que servicios deseas inyectar [' + funcionNombre + ']?',
+                ['Todos', 'Domingos', 'Lunes', 'Ninguno']
+            );
+            if (seleccion === null || seleccion === '3') return;
+
+            let modif = 0;
+            filtrados.forEach(serv => {
+                const esDom = new Date(serv.fecha + 'T00:00:00').getDay() === 0;
+                const esLun = new Date(serv.fecha + 'T00:00:00').getDay() === 1;
+                if (seleccion === '0' || (seleccion === '1' && esDom) || (seleccion === '2' && esLun)) {
+                    if (!serv.roles.some(r => r.ministerio === funcionNombre)) {
+                        serv.roles.push({ ministerio: funcionNombre, lider: '' });
+                        modif++;
+                    }
+                }
+            });
+            if (modif > 0) {
+                cambiosPendientes = true; guardarLocal(); renderCronograma();
+                toast('Funcion inyectada en ' + modif + ' servicios', 'success');
+            }
+        }
+
+        async function quitarFuncionDeServicioSpecifico(servId, ministerio) {
+            const s = appData.cronograma.find(x => x.id === servId);
+            if (s && await modalConfirm('Remover asignacion', 'Remover la asignacion "' + ministerio + '" de este dia?')) {
+                s.roles = s.roles.filter(r => r.ministerio !== ministerio);
+                cambiosPendientes = true; guardarLocal(); renderCronograma();
+                toast('Asignacion removida', 'success');
+            }
+        }
+
+        // ============ GENERACION ============
+        function generarMes() {
+            const m = document.getElementById('select-mes-desplegable').value;
+            const a = document.getElementById('select-anio-desplegable').value;
+            const año = Number(a), mes = Number(m);
+            const numDias = new Date(año, mes, 0).getDate();
+            let agregados = 0;
+
+            for (let dia = 1; dia <= numDias; dia++) {
+                const fechaObj = new Date(año, mes - 1, dia);
+                const diaSemana = fechaObj.getDay();
+                if (diaSemana === 0 || diaSemana === 1) {
+                    const stringFecha = año + '-' + String(mes).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
+                    const tipoServicio = diaSemana === 0 ? 'CELEBRACION AL REY' : 'APOSENTO ALTO';
+                    if (!appData.cronograma.some(s => s.fecha === stringFecha)) {
+                        let rolesDia = appData.funciones.map(f => ({ ministerio: f, lider: '' }));
+                        appData.cronograma.push({ id: genId('id_'), fecha: stringFecha, tipo: tipoServicio, roles: rolesDia });
+                        agregados++;
+                    }
+                }
+            }
+            guardarLocal(); renderCronograma();
+            toast('Generados ' + agregados + ' servicios', 'success');
+        }
+
+        function crearServicioEspecial(e) {
+            e.preventDefault();
+            const fechaInput = document.getElementById('especial-fecha').value;
+            const nombreInput = document.getElementById('especial-nombre').value.trim();
+            if (!fechaInput || !nombreInput) return;
+
+            appData.cronograma.push({
+                id: genId('id_'), fecha: fechaInput, tipo: nombreInput.toUpperCase(),
+                roles: appData.funciones.map(f => ({ ministerio: f, lider: '' }))
+            });
+            document.getElementById('select-mes-desplegable').value = fechaInput.slice(5, 7);
+            document.getElementById('select-anio-desplegable').value = fechaInput.slice(0, 4);
+            document.getElementById('especial-nombre').value = '';
+            document.getElementById('especial-fecha').value = '';
+            guardarLocal(); renderCronograma();
+            toast('Servicio especial creado', 'success');
+        }
+
+        async function eliminarDia(id) {
+            if (await modalConfirm('Eliminar dia', 'Eliminar este dia de servicio?')) {
+                appData.cronograma = appData.cronograma.filter(x => x.id !== id);
+                guardarLocal(); renderCronograma();
+                toast('Dia eliminado', 'success');
+            }
+        }
+
+        async function borrarTodo() {
+            if (await modalConfirm('Vaciar mes', 'Remover todos los servicios de este mes?')) {
+                const filtroMes = obtenerCodigoMesActivo();
+                appData.cronograma = appData.cronograma.filter(s => !s.fecha.startsWith(filtroMes));
+                guardarLocal(); renderCronograma();
+                toast('Mes vaciado', 'success');
+            }
+        }
+
+        // ============ LIDERES ============
+        function renderLideres() {
+            const ul = document.getElementById('lista-lideres-render');
+            if (!ul) return;
+            ul.innerHTML = '';
+            [...appData.lideres].sort().forEach(l => {
+                const li = document.createElement('li');
+                li.innerHTML =
+                    '<span><strong>' + esc(l) + '</strong></span>' +
+                    '<div style="display:flex; gap:0.3rem;">' +
+                        '<button class="btn btn-secondary btn-icon" data-action="editar-lider" data-lider="' + esc(l) + '">edit</button>' +
+                        '<button class="btn btn-danger btn-icon" data-action="eliminar-lider" data-lider="' + esc(l) + '">x</button>' +
+                    '</div>';
+                ul.appendChild(li);
+            });
+        }
+
+        function agregarLider(e) {
+            e.preventDefault();
+            const input = document.getElementById('nuevo-lider-nombre');
+            const n = input.value.trim();
+            if (n && !appData.lideres.includes(n)) {
+                appData.lideres.push(n);
+                input.value = ''; guardarLocal(); renderTodo();
+                toast('Lider agregado', 'success');
+            } else if (appData.lideres.includes(n)) {
+                toast('Ese lider ya existe', 'warning');
+            }
+        }
+
+        async function editarLider(nombreActual) {
+            const nuevoNombre = await modalPrompt('Editar lider', 'Nombre del lider:', nombreActual);
+            if (nuevoNombre === null) return;
+            if (nuevoNombre === '') { toast('El nombre no puede estar vacio', 'warning'); return; }
+            if (nuevoNombre !== nombreActual && appData.lideres.includes(nuevoNombre)) {
+                toast('Ya existe un lider con ese nombre', 'warning'); return;
+            }
+            const index = appData.lideres.indexOf(nombreActual);
+            if (index !== -1) appData.lideres[index] = nuevoNombre;
+            appData.cronograma.forEach(servicio => {
+                servicio.roles.forEach(rol => { if (rol.lider === nombreActual) rol.lider = nuevoNombre; });
+            });
+            cambiosPendientes = true; guardarLocal(); renderTodo();
+            toast('Lider actualizado', 'success');
+        }
+
+        async function eliminarLider(n) {
+            if (await modalConfirm('Remover lider', 'Deseas remover a ' + n + '?')) {
+                appData.lideres = appData.lideres.filter(x => x !== n);
+                guardarLocal(); renderTodo();
+                toast('Lider removido', 'success');
+            }
+        }
+
+        // ============ FUNCIONES ============
+        function renderFunciones() {
+            const ul = document.getElementById('lista-funciones-render');
+            if (!ul) return;
+            ul.innerHTML = '';
+            appData.funciones.forEach(f => {
+                const li = document.createElement('li');
+                li.innerHTML =
+                    '<span><strong>' + esc(f) + '</strong></span>' +
+                    '<button class="btn btn-danger btn-icon" data-action="eliminar-funcion" data-funcion="' + esc(f) + '">x</button>';
+                ul.appendChild(li);
+            });
+        }
+
+        function agregarFuncion(e) {
+            e.preventDefault();
+            const input = document.getElementById('nueva-funcion-nombre');
+            const f = input.value.trim();
+            if (f && !appData.funciones.includes(f)) {
+                appData.funciones.push(f);
+                input.value = '';
+                preguntarEInyectarFuncion(f);
+                guardarLocal(); renderTodo();
+                toast('Funcion creada', 'success');
+            } else if (appData.funciones.includes(f)) {
+                toast('Esa funcion ya existe', 'warning');
+            }
+        }
+
+        async function eliminarFuncion(f) {
+            if (await modalConfirm('Eliminar funcion', 'Eliminar la funcion "' + f + '"?')) {
+                appData.funciones = appData.funciones.filter(x => x !== f);
+                guardarLocal(); renderTodo();
+                toast('Funcion eliminada', 'success');
+            }
+        }
+
+        // ============ ESTADISTICAS ============
+        function calcularEstadisticas() {
+            const tbody = document.getElementById('tabla-estadisticas');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            appData.lideres.forEach(lider => {
+                let total = 0, ultima = 'Sin registros';
+                const mapaAsig = {};
+                appData.cronograma.forEach(s => {
+                    s.roles.forEach(r => {
+                        if (r.lider === lider) {
+                            total++;
+                            if (ultima === 'Sin registros' || s.fecha > ultima) ultima = s.fecha;
+                            mapaAsig[r.ministerio] = (mapaAsig[r.ministerio] || 0) + 1;
+                        }
+                    });
+                });
+                let pref = '-'; let max = 0;
+                for (const [k, v] of Object.entries(mapaAsig)) { if (v > max) { max = v; pref = k; } }
+                const ultimaFmt = ultima === 'Sin registros' ? ultima : formatDateShort(ultima);
+                const tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td><strong>' + esc(lider) + '</strong></td>' +
+                    '<td>' + total + ' veces</td>' +
+                    '<td style="font-size:0.85rem;">' + esc(ultimaFmt) + '</td>' +
+                    '<td style="color:var(--primary-600); font-weight:bold;">' + esc(pref) + '</td>';
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ============ RESPALDO ============
+        function exportarJSON() {
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appData));
+            const dl = document.createElement('a');
+            dl.setAttribute('href', dataStr);
+            dl.setAttribute('download', 'respaldo_general.json');
+            dl.click();
+            toast('Respaldo descargado', 'success');
+        }
+
+        function importarJSON(e) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if (parsed.lideres && parsed.cronograma) {
+                        appData = parsed;
+                        if (!appData.anunciosEspeciales) appData.anunciosEspeciales = [];
+                        if (!appData.mesesGuardados) appData.mesesGuardados = {};
+                        guardarLocal(); renderTodo();
+                        toast('Respaldo importado con exito', 'success');
+                    } else {
+                        toast('Archivo incompatible', 'error');
+                    }
+                } catch(err) {
+                    toast('Error al importar el archivo', 'error');
+                }
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+
+        // ============ SHARE ============
+        function shareText(text, title) {
+            if (navigator.share) {
+                navigator.share({ title: title || 'MVFI', text: text }).catch(() => {
+                    navigator.clipboard.writeText(text);
+                    toast('Copiado al portapapeles', 'success');
+                });
+            } else {
+                navigator.clipboard.writeText(text);
+                toast('Copiado al portapapeles', 'success');
+            }
+        }
+
+        function compartirCronograma() {
+            const filtroMes = obtenerCodigoMesActivo();
+            const filtrados = appData.cronograma.filter(s => s.fecha.startsWith(filtroMes));
+            if (filtrados.length === 0) { toast('No hay servicios para compartir', 'warning'); return; }
+            filtrados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            let txt = 'CRONOGRAMA DE ROLES (' + filtroMes + ')\n\n';
+            filtrados.forEach(s => {
+                const f = formatDate(s.fecha, { weekday: 'short', day: 'numeric' });
+                txt += f.toUpperCase() + ' - ' + s.tipo + '\n';
+                s.roles.forEach(r => { txt += '  ' + r.ministerio + ': ' + (r.lider || 'Sin Asignar') + '\n'; });
+                txt += '\n';
+            });
+            shareText(txt, 'Cronograma MVFI');
+        }
+    </script>
+</body>
+</html>
